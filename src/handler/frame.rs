@@ -165,7 +165,7 @@ impl Frame {
 impl From<CdpFrame> for Frame {
     fn from(frame: CdpFrame) -> Self {
         Self {
-            parent_frame: frame.parent_id.map(From::from),
+            parent_frame: frame.parent_id,
             id: frame.id,
             main_world: Default::default(),
             secondary_world: Default::default(),
@@ -359,7 +359,7 @@ impl FrameManager {
     pub fn on_frame_tree(&mut self, frame_tree: FrameTree) {
         self.on_frame_attached(
             frame_tree.frame.id.clone(),
-            frame_tree.frame.parent_id.clone().map(Into::into),
+            frame_tree.frame.parent_id.clone(),
         );
         self.on_frame_navigated(&frame_tree.frame);
         if let Some(children) = frame_tree.child_frames {

@@ -150,3 +150,19 @@ impl fmt::Debug for BrowserStderr {
             .finish()
     }
 }
+
+#[cfg(test)]
+mod public_error_contract_tests {
+    use super::*;
+
+    #[test]
+    fn websocket_error_retains_its_public_shape_and_size_budget() {
+        let error: CdpError = tungstenite::Error::ConnectionClosed.into();
+        assert!(matches!(
+            error,
+            CdpError::Ws(tungstenite::Error::ConnectionClosed)
+        ));
+        let size = std::mem::size_of::<CdpError>();
+        assert!(size <= 136, "public error size: {size}");
+    }
+}

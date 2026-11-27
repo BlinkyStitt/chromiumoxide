@@ -460,7 +460,7 @@ impl Handler {
         // remove the session
         if let Some(session) = self.sessions.remove(&event.session_id) {
             if let Some(target) = self.targets.get_mut(session.target_id()) {
-                target.session_id().take();
+                target.clear_session_id(&event.session_id);
             }
         }
     }

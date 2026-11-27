@@ -1,4 +1,6 @@
 /target
 /download
 Cargo.lock
+# Keep the workspace graph reproducible for CI and Rust 1.70.
+!/Cargo.lock
 .idea/

@@ -127,6 +127,13 @@ impl Target {
         self.session_id = Some(id)
     }
 
+    /// Clear only the detached session; a newer attachment must remain active.
+    pub(crate) fn clear_session_id(&mut self, id: &SessionId) {
+        if self.session_id.as_ref() == Some(id) {
+            self.session_id = None;
+        }
+    }
+
     pub fn session_id(&self) -> Option<&SessionId> {
         self.session_id.as_ref()
     }
@@ -781,4 +788,44 @@ pub enum TargetMessage {
     /// Get the `ExecutionContext` if available
     GetExecutionContext(GetExecutionContext),
     Authenticate(Credentials),
+}
+
+#[cfg(test)]
+mod session_tests {
+    use super::*;
+
+    fn target() -> Target {
+        let info = TargetInfo::builder()
+            .target_id("target".to_owned())
+            .r#type("page")
+            .title("")
+            .url("about:blank")
+            .attached(false)
+            .can_access_opener(false)
+            .build()
+            .unwrap();
+        Target::new(info, TargetConfig::default(), BrowserContext::default())
+    }
+
+    #[test]
+    fn detach_clears_the_active_session() {
+        let mut target = target();
+        let session = SessionId::from("active".to_owned());
+        target.set_session_id(session.clone());
+        target.clear_session_id(&session);
+        assert!(target.session_id().is_none());
+        target.clear_session_id(&session);
+        assert!(target.session_id().is_none());
+    }
+
+    #[test]
+    fn stale_detach_preserves_a_newer_session() {
+        let mut target = target();
+        let old = SessionId::from("old".to_owned());
+        let current = SessionId::from("current".to_owned());
+        target.set_session_id(old.clone());
+        target.set_session_id(current.clone());
+        target.clear_session_id(&old);
+        assert_eq!(target.session_id(), Some(&current));
+    }
 }
