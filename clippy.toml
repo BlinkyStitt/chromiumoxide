@@ -1,0 +1,3 @@
+# CdpError::Ws exposes tungstenite::Error as part of the existing public API.
+# The cutoff accepts 136 bytes. A regression test prevents further growth.
+large-error-threshold = 137

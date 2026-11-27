@@ -1200,14 +1200,21 @@ mod tests {
 
     #[test]
     fn test_serde_import() {
-        let dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let schemas = Path::new(env!("CARGO_MANIFEST_DIR")).join("../chromiumoxide_cdp");
+        let output = tempfile::tempdir().unwrap();
         Generator::default()
-            .out_dir(dir.join("src"))
+            .out_dir(output.path())
             .serde(SerdeSupport::with_feature("serde0"))
             .compile_pdls(&[
-                dir.join("js_protocol.pdl"),
-                dir.join("browser_protocol.pdl"),
+                schemas.join("js_protocol.pdl"),
+                schemas.join("browser_protocol.pdl"),
             ])
             .unwrap();
+        let generated = std::fs::read_to_string(output.path().join("cdp.rs")).unwrap();
+        let compact: String = generated.chars().filter(|c| !c.is_whitespace()).collect();
+        assert!(
+            compact.contains("#[cfg(feature=\"serde0\")]useserde::{Serialize,Deserialize};")
+                || compact.contains("#[cfg(feature=\"serde0\")]useserde::{Deserialize,Serialize};")
+        );
     }
 }

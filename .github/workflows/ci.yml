@@ -1,86 +1,81 @@
-on: [push, pull_request]
-
 name: Continuous integration
-
 jobs:
   check:
     name: Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: check
-
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: false
+    - name: Install Rust stable
+      run: rustup toolchain install stable --profile minimal --no-self-update
+    - name: Select the installed toolchain
+      run: rustup override set stable
+    - run: cargo check --locked
   test:
     name: Test Suite
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os:
+        - ubuntu-latest
+        - macos-latest
+        - windows-latest
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: false
+    - name: Install Rust stable
+      run: rustup toolchain install stable --profile minimal --no-self-update --component rustfmt
+    - name: Select the installed toolchain
+      run: rustup override set stable
+    - run: cargo test --locked
+    - run: cargo test --locked -p chromiumoxide_pdl
+      name: Test the protocol parser workspace crate
   fmt:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - run: rustup component add rustfmt
-      - uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
-
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: false
+    - name: Install Rust stable
+      run: rustup toolchain install stable --profile minimal --no-self-update
+    - name: Select the installed toolchain
+      run: rustup override set stable
+    - run: rustup component add rustfmt
+    - run: cargo fmt --all -- --check
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - run: rustup component add clippy
-      - uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: -- -D warnings
-
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: false
+    - name: Install Rust stable
+      run: rustup toolchain install stable --profile minimal --no-self-update
+    - name: Select the installed toolchain
+      run: rustup override set stable
+    - run: rustup component add clippy
+    - run: cargo clippy --locked -- -D warnings
   msrv:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: "1.70.0"
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --lib
-
-# Superseded PR validation must not hold runner capacity.
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: false
+    - name: Install Rust 1.70.0
+      run: rustup toolchain install 1.70.0 --profile minimal --no-self-update
+    - name: Select the installed toolchain
+      run: rustup override set 1.70.0
+    - run: cargo check --locked --lib
 concurrency:
   group: pr-ci-ci.yml-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
+'on':
+  push:
+    branches:
+    - main
+  pull_request: null
+permissions:
+  contents: read

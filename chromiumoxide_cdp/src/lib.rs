@@ -39,7 +39,6 @@ impl Default for CreateTargetParams {
 }
 
 /// RequestId conversion
-
 impl From<fetch::RequestId> for network::RequestId {
     fn from(req: fetch::RequestId) -> Self {
         let s: String = req.into();
